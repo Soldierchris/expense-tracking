@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Dashboard</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        
+        .badge-cash {
+            background-color: var(--success-color);
+        }
+        
+        .badge-debit {
+            background-color: var(--primary-color);
+        }
+        
+        .badge-credit {
+            background-color: var(--warning-color);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .expense-item {
+            transition: background-color 0.2s;
+        }
+        
+        .expense-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-wallet2"></i> Expense Tracker
+            </span>
+            <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <i class="bi bi-plus-circle"></i> Agregar Gasto
+            </button>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando datos...</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4" id="statsCards">
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Total Gastado</p>
+                                <h3 class="mb-0" id="totalAmount">$0.00</h3>
+                                <small class="text-muted">Últimos 30 días</small>
+                            </div>
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Total Gastos</p>
+                                <h3 class="mb-0" id="totalCount">0</h3>
+                                <small class="text-muted">Transacciones</small>
+                            </div>
+                            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Promedio</p>
+                                <h3 class="mb-0" id="avgExpense">$0.00</h3>
+                                <small class="text-muted">Por gasto</small>
+                            </div>
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1">Gasto Diario</p>
+                                <h3 class="mb-0" id="dailyAvg">$0.00</h3>
+                                <small class="text-muted">Promedio</small>
+                            </div>
+                            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- Pie Chart - Por Categoría -->
+            <div class="col-md-6 mb-3">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="bi bi-pie-chart"></i> Gastos por Categoría</h5>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Bar Chart - Por Método de Pago -->
+            <div class="col-md-6 mb-3">
+                <div class="chart-container">
+                    <h5 class="mb-3"><i class="bi bi-bar-chart"></i> Por Método de Pago</h5>
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Expenses Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Gastos Recientes</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="loadDashboard()">
+                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Categoría</th>
+                                    <th>Descripción</th>
+                                    <th>Método</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Agregar Gasto -->
+    <div class="modal fade" id="addExpenseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Agregar Nuevo Gasto
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addExpenseForm">
+                        <div class="mb-3">
+                            <label class="form-label">Monto *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Categoría *</label>
+                            <select class="form-select" id="category" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="Comida">Comida</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Entretenimiento">Entretenimiento</option>
+                                <option value="Salud">Salud</option>
+                                <option value="Servicios">Servicios</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Método de Pago *</label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="cash">Efectivo</option>
+                                <option value="debit_card">Tarjeta de Débito</option>
+                                <option value="credit_card">Tarjeta de Crédito</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="description" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="createExpense()">
+                        <i class="bi bi-check-circle"></i> Guardar Gasto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Configuración de la API
+        const API_URL = 'http://localhost:8000';
+        
+        // Variables globales para los gráficos
+        let categoryChart = null;
+        let paymentChart = null;
+
+        // Cargar dashboard al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        // Función para cargar datos del dashboard
+        async function loadDashboard() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${API_URL}/dashboard/?days=30`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar dashboard');
+                }
+                
+                const data = await response.json();
+                
+                // Actualizar estadísticas
+                updateStats(data.summary, data.trend);
+                
+                // Actualizar gráficos
+                updateCharts(data.by_category, data.by_payment_method);
+                
+                // Cargar tabla de gastos
+                await loadExpensesTable();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar el dashboard. Asegúrate de que el backend esté corriendo.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats(summary, trend) {
+            document.getElementById('totalAmount').textContent = formatCurrency(summary.total_amount);
+            document.getElementById('totalCount').textContent = summary.expense_count;
+            document.getElementById('avgExpense').textContent = formatCurrency(summary.average_per_expense);
+            document.getElementById('dailyAvg').textContent = formatCurrency(trend.average_daily);
+        }
+
+        // Actualizar gráficos
+        function updateCharts(byCategory, byPaymentMethod) {
+            // Gráfico de categorías (Pie)
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            categoryChart = new Chart(categoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(byCategory.totals),
+                    datasets: [{
+                        data: Object.values(byCategory.totals),
+                        backgroundColor: [
+                            '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatCurrency(context.parsed);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de métodos de pago (Bar)
+            const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+            
+            if (paymentChart) {
+                paymentChart.destroy();
+            }
+            
+            const paymentLabels = {
+                'cash': 'Efectivo',
+                'debit_card': 'Débito',
+                'credit_card': 'Crédito'
+            };
+            
+            paymentChart = new Chart(paymentCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(byPaymentMethod).map(k => paymentLabels[k] || k),
+                    datasets: [{
+                        label: 'Total Gastado',
+                        data: Object.values(byPaymentMethod),
+                        backgroundColor: ['#10b981', '#4f46e5', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Total: ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Cargar tabla de gastos
+        async function loadExpensesTable() {
+            try {
+                const response = await fetch(`${API_URL}/expenses/`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('expensesTableBody');
+                tbody.innerHTML = '';
+                
+                if (data.expenses.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay gastos registrados</td></tr>';
+                    return;
+                }
+                
+                data.expenses.slice(0, 10).forEach(expense => {
+                    const row = createExpenseRow(expense);
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error al cargar gastos:', error);
+            }
+        }
+
+        // Crear fila de gasto
+        function createExpenseRow(expense) {
+            const tr = document.createElement('tr');
+            tr.className = 'expense-item';
+            
+            const date = new Date(expense.date);
+            const formattedDate = date.toLocaleDateString('es-ES', { 
+                day: '2-digit', 
+                month: '2-digit',
+                year: 'numeric'
+            });
+            
+            const paymentBadges = {
+                'cash': 'badge-cash',
+                'debit_card': 'badge-debit',
+                'credit_card': 'badge-credit'
+            };
+            
+            const paymentLabels = {
+                'cash': 'Efectivo',
+                'debit_card': 'Débito',
+                'credit_card': 'Crédito'
+            };
+            
+            tr.innerHTML = `
+                <td>${formattedDate}</td>
+                <td><span class="badge bg-secondary">${expense.category}</span></td>
+                <td>${expense.description || '-'}</td>
+                <td><span class="badge ${paymentBadges[expense.payment_method]}">${paymentLabels[expense.payment_method]}</span></td>
+                <td class="text-end fw-bold">${formatCurrency(expense.amount)}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${expense.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            return tr;
+        }
+
+        // Crear nuevo gasto
+        async function createExpense() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const description = document.getElementById('description').value;
+            
+            if (!amount || !category || !paymentMethod) {
+                alert('Por favor completa todos los campos obligatorios');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/expenses/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount,
+                        category,
+                        payment_method: paymentMethod,
+                        description: description || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al crear gasto');
+                }
+                
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addExpenseModal'));
+                modal.hide();
+                
+                // Limpiar formulario
+                document.getElementById('addExpenseForm').reset();
+                
+                // Recargar dashboard
+                await loadDashboard();
+                
+                alert('¡Gasto creado exitosamente!');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al crear gasto');
+            }
+        }
+
+        // Eliminar gasto
+        async function deleteExpense(id) {
+            if (!confirm('¿Estás seguro de eliminar este gasto?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/expenses/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al eliminar gasto');
+                }
+                
+                await loadDashboard();
+                alert('Gasto eliminado exitosamente');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar gasto');
+            }
+        }
+
+        // Utilidades
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const statsCards = document.getElementById('statsCards');
+            
+            if (show) {
+                loading.classList.add('show');
+                statsCards.style.opacity = '0.5';
+            } else {
+                loading.classList.remove('show');
+                statsCards.style.opacity = '1';
+            }
+        }
+    </script>
+</body>
+</html>
