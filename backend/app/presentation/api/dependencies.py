@@ -5,7 +5,11 @@
 # app/presentation/api/dependencies.py
 from typing import Annotated
 from fastapi import Depends
+from sqlalchemy.orm import Session
 
+from ...infrastructure.database.connection import get_db
+from ...infrastructure.repositories.postgresql_expense_repository import PostgreSQLExpenseRepository
+from ...application.use_cases.create_expense import CreateExpenseUseCase
 from ...infrastructure.repositories.json_expense_repository import JsonExpenseRepository
 from ...application.use_cases.create_expense import CreateExpenseUseCase
 from ...application.use_cases.get_expense_by_id import GetExpenseByIdUseCase
@@ -16,16 +20,28 @@ from ...application.use_cases.delete_expense import DeleteExpenseUseCase
 from ...application.use_cases.get_dashboard_data import GetDashboardDataUseCase
 from ...core.config import settings
 
-
+"""
 def get_expense_repository() -> JsonExpenseRepository:
-    """
-    Dependency: Provee una instancia del repository
     
-    Aquí es donde se decide QUÉ implementación usar.
-    En el futuro puedes cambiar a PostgreSQL sin tocar nada más.
-    """
+    #Dependency: Provee una instancia del repository
+    
+    #Aquí es donde se decide QUÉ implementación usar.
+    #En el futuro puedes cambiar a PostgreSQL sin tocar nada más.
+    
     settings.ensure_data_directory()
     return JsonExpenseRepository(settings.data_file_path)
+"""
+
+def get_expense_repository(
+        db: Session = Depends(get_db)
+)->PostgreSQLExpenseRepository:
+    """
+    Dependency: Provee una instancia del repository PostgreSQL
+    
+    ANTES: JsonExpenseRepository
+    AHORA: PostgreSQLExpenseRepository
+    """
+    return PostgreSQLExpenseRepository(db)
 
 
 def get_create_expense_use_case(
