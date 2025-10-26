@@ -1,23 +1,29 @@
 # =============================================================================
 # PASO 4: MAIN APP
 # =============================================================================
-
-# app/presentation/api/main.py
+# app/presentation/api/main.py - ACTUALIZADO
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .expense_routes import router as expense_router, dashboard_router
 from ...core.config import settings
-
+from ...infrastructure.database.connection import init_db  # NUEVO
 
 # Crear aplicación FastAPI
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="API REST para control de gastos personales",
+    description="API REST para control de gastos personales con PostgreSQL",
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# NUEVO: Inicializar BD al arrancar
+@app.on_event("startup")
+async def startup_event():
+    """Evento de inicio: crear tablas si no existen"""
+    init_db()
+    print("✅ Base de datos PostgreSQL inicializada")
 
 # Configurar CORS
 app.add_middleware(
@@ -40,16 +46,8 @@ async def root():
         "app": settings.app_name,
         "version": settings.app_version,
         "status": "running",
+        "database": "PostgreSQL",
         "docs": "/docs"
-    }
-
-
-@app.get("/health", tags=["health"])
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "app": settings.app_name
     }
 
 
