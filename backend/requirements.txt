@@ -31,6 +31,6 @@ pytest-asyncio==0.24.0
 python-dotenv==1.0.1
 
 #Para conectar con PowerBI, si me gustaria hacerlo
-pandas==2.1.4
+#pandas==2.1.4
 
 

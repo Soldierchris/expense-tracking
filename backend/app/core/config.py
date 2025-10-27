@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     data_file_path: str = "data/expenses.json"
 
     #Configuracion de la base de datos
-    database_url: str = "postgresql://postgres:corpus8080@localhost:5432/expensedb"
+    database_url: str = "postgresql://postgres:password@localhost:5432/expensedb"
     #database_url: str = "postgresql://postgres:password@localhost:5432/expensedb"
 
     # Configuración de API

@@ -1,0 +1,45 @@
+# app/infrastructure/database/connection.py
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
+import sys
+
+# Configurar encoding para Windows
+if sys.platform == "win32":
+    import locale
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
+from ...core.config import settings
+
+# Crear engine de SQLAlchemy con opciones específicas para Windows
+engine = create_engine(
+    settings.database_url,
+    echo=settings.debug,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10,
+    # AGREGAR ESTAS OPCIONES PARA WINDOWS:
+    connect_args={
+        "options": "-c client_encoding=utf8"
+    },
+    # Forzar encoding
+    client_encoding='utf8'
+)
+
+# Resto del código igual...
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def init_db():
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
