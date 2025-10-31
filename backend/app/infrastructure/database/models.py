@@ -12,8 +12,8 @@ class PaymentMethodEnum(str, enum.Enum):
     Enum para metodos de pago en la base de datos
     """
     CASH= "cash"
-    DEBIT_CARD = "debit card"
-    CREDIT_CARD = "credit card"
+    DEBIT_CARD = "debit_card"
+    CREDIT_CARD = "credit_card"
 
 class ExpenseModel(Base):
     """

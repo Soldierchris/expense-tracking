@@ -99,7 +99,7 @@ class PostgreSQLExpenseRepository(ExpenseRepository):
         """Obtiene todos los gastos"""
         models = self.db.query(ExpenseModel).order_by(
             ExpenseModel.date.desc()
-        ).all    
+        ).all()    
         return [self._model_to_entity(model)for model in models]
     
     def get_by_date_range(
@@ -206,7 +206,8 @@ class PostgreSQLExpenseRepository(ExpenseRepository):
         results = self.db.query(
             ExpenseModel.category,
             func.count(ExpenseModel.id).label('count')
-        )
+        ).group_by(ExpenseModel.category).all() #inserte este linea copilot
+
         return {category: count for category, count in results}
     
     def search_by_description(self, search_term:str)-> List[Expense]:

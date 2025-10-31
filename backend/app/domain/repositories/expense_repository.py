@@ -39,7 +39,7 @@ class ExpenseRepository(ABC):
         Returns: Optional[Expense]: El gasto si existe, None si no existe
         """
         pass
-
+    @abstractmethod
     def get_all(self) -> List[Expense]:
         """
         Obtiene todos los gastos
