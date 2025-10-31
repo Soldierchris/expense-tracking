@@ -32,7 +32,7 @@ class PostgreSQLExpenseRepository(ExpenseRepository):
         """
         self.db = db
         
-    def model_to_entity(self, model: ExpenseModel) -> Expense:
+    def _model_to_entity(self, model: ExpenseModel) -> Expense:
         """
         Convierte un modelo se SQLALchemy a una entidad de dominio
         Args: model: Modelo de SQLAlchemy
@@ -47,6 +47,25 @@ class PostgreSQLExpenseRepository(ExpenseRepository):
             id=model.id
         )
     
+    def _entity_to_model(self, entity: Expense) -> ExpenseModel:
+        """
+        Convierte una entidad del dominio a un modelo de SQLAlchemy
+        
+        Args:
+            entity: Entidad del dominio
+            
+        Returns:
+            ExpenseModel: Modelo de SQLAlchemy
+        """
+        return ExpenseModel(
+            id=entity.id,
+            amount=entity.amount,
+            category=entity.category,
+            payment_method=PaymentMethodEnum(entity.payment_method.value),
+            date=entity.date,
+            description=entity.description
+        )
+
     def save(self, expense: Expense)->Expense:
         """Guarda un gasto nuevo"""
         try:
